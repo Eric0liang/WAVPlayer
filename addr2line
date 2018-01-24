@@ -1,0 +1,1 @@
+arm-linux-androideabi-addr2line -e app/build/intermediates/binaries/debug/obj/armeabi-v7a/libapp.so 00337377 -f

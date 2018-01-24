@@ -1,0 +1,111 @@
+apply plugin: 'com.android.model.application'
+
+model { //这一行是新加的，对应上边的修改,
+
+    repositories {
+        libs(PrebuiltLibraries) {
+            // Configure one pre-built lib: shared
+            wavlib_shared {
+                binaries.withType(SharedLibraryBinary) {
+                    sharedLibraryFile = file("libs/${targetPlatform.getName()}/libwavlib_shared.so")
+                }
+            }
+            avilib_shared {
+                binaries.withType(SharedLibraryBinary) {
+                    sharedLibraryFile = file("libs/${targetPlatform.getName()}/libavilib_shared.so")
+                }
+            }
+            fmod {
+                binaries.withType(SharedLibraryBinary) {
+                    sharedLibraryFile = file("libs/${targetPlatform.getName()}/libfmod.so")
+                }
+            }
+
+            fmodL {
+                binaries.withType(SharedLibraryBinary) {
+                    sharedLibraryFile = file("libs/${targetPlatform.getName()}/libfmodL.so")
+                }
+            }
+        }
+    }
+
+    android {
+        compileSdkVersion = 25
+        buildToolsVersion = "25.0.2"
+        defaultConfig {
+            applicationId "com.apress.wavplayer"
+            minSdkVersion.apiLevel = 10//这两个参数和原来有点不一样，多了apiLevel
+            targetSdkVersion.apiLevel = 25
+            versionCode 1
+            versionName "1.0"
+        }
+
+        ndk {       //NDK设置
+            moduleName = "app"//动态库的名称
+            toolchain = "clang"
+            // Note that CFlags has a capital C, which is inconsistent with
+            // the naming convention of other properties.  This is a
+            // technical limitation that will be resolved
+            CFlags.add("-DCUSTOM_DEFINE")
+            cppFlags.add("-DCUSTOM_DEFINE")
+            cppFlags.add("-DGL_GLEXT_PROTOTYPES")
+            cppFlags.add("-fexceptions")
+            ldFlags.add("-L/custom/lib/path")
+            ldLibs.addAll(['log']) //库文件名
+            ldLibs.addAll(['OpenSLES'])
+            ldLibs.addAll(['jnigraphics'])
+            ldLibs.addAll(['GLESv1_CM'])
+            ldLibs.addAll(['android'])
+            //cppFlags.add("-I${file("../transcode-1.1.7/avilib")}".toString())
+            stl = "gnustl_static" //指示使用动态库还是静态库,stlport_static
+            abiFilters.addAll('armeabi', 'armeabi-v7a', 'x86') //CPU架构
+        }
+        buildTypes {
+            release {
+                ndk.debuggable = false
+                minifyEnabled false
+                proguardFiles.add(file("proguard-rules.pro"))
+            }
+            debug {
+                ndk.debuggable = true //有这个才会支持调试native 代码
+            }
+        }
+        sources {
+            main {
+                java {
+                    source {
+                        srcDir "src"
+                    }
+                }
+                jniLibs {
+                    source {
+                        srcDir "libs"
+                    }
+                }
+                jni {
+                    exportedHeaders {
+                        srcDir "../transcode-1.1.7/avilib"
+                        srcDir "../inc"
+                    }
+                    dependencies {
+                        library 'wavlib_shared' linkage 'shared'
+                        library 'fmod' linkage 'shared'
+                        library 'fmodL' linkage 'shared'
+                        library 'avilib_shared' linkage 'shared'
+                    }
+                }
+            }
+        }
+        /*sourceSets {
+            main.jni.srcDirs = []
+            main.jniLibs.srcDir "src/main/libs"
+            main { java.srcDirs = ['src/main/java'] }
+        }*/
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+}
