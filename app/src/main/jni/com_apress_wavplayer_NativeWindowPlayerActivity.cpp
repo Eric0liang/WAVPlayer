@@ -28,6 +28,7 @@ Java_com_apress_wavplayer_NativeWindowPlayerActivity_init(JNIEnv *env, jclass ty
                        "Unable to set buffers geometry.");
         goto exit;
     }
+
     ANativeWindow_release(nativeWindow);
     nativeWindow = 0;
     exit:
